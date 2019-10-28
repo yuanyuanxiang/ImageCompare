@@ -39,6 +39,9 @@
     <ClInclude Include="SelectDirDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\public\fileop.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImageCompare.cpp">
@@ -51,6 +54,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="SelectDirDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\public\fileop.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

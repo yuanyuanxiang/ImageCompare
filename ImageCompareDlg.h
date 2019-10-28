@@ -76,4 +76,5 @@ public:
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	CEdit m_EditCur;
 	CEdit m_EditTotal;
+	CButton m_ButtonScan;
 };

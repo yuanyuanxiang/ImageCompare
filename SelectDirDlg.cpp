@@ -5,6 +5,7 @@
 #include "ImageCompare.h"
 #include "SelectDirDlg.h"
 #include "afxdialogex.h"
+#include "Resource.h"
 
 
 // SelectDirDlg ¶Ô»°¿ò
@@ -43,6 +44,7 @@ BEGIN_MESSAGE_MAP(SelectDirDlg, CDialogEx)
 	ON_EN_SETFOCUS(IDC_EDIT_SRC_PATH, &SelectDirDlg::OnEnSetfocusEditSrcPath)
 	ON_EN_SETFOCUS(IDC_EDIT_DST_PATH, &SelectDirDlg::OnEnSetfocusEditDstPath)
 	ON_BN_CLICKED(IDC_RADIO_RECURSIVE, &SelectDirDlg::OnBnClickedRadioRecursive)
+	ON_BN_CLICKED(IDC_RADIO_FILE, &SelectDirDlg::OnBnClickedRadioFile)
 END_MESSAGE_MAP()
 
 
@@ -55,16 +57,29 @@ void SelectDirDlg::OnEnSetfocusEditSrcPath()
 	if (isSelect) return;
 	isSelect = true;
 
-	char szPath[MAX_PATH] = {0};
-	BROWSEINFO bi = {0};
-	bi.hwndOwner = m_hWnd;
-	bi.lpszTitle = _T("Select src dir");
-	LPITEMIDLIST lp = SHBrowseForFolder(&bi);
-	if (lp && SHGetPathFromIDListA(lp, szPath))
+	CButton *p = (CButton *)GetDlgItem(IDC_RADIO_FILE);
+	if (p->GetCheck())
 	{
-		m_strSrcDir = CString(szPath);
-		UpdateData(FALSE);
+		CFileDialog dlg(TRUE);
+		if (dlg.DoModal() == IDOK) {
+			m_strSrcDir = dlg.GetPathName();
+			UpdateData(FALSE);
+		}
 	}
+	else
+	{
+		char szPath[MAX_PATH] = { 0 };
+		BROWSEINFO bi = { 0 };
+		bi.hwndOwner = m_hWnd;
+		bi.lpszTitle = _T("Select src dir");
+		LPITEMIDLIST lp = SHBrowseForFolder(&bi);
+		if (lp && SHGetPathFromIDListA(lp, szPath))
+		{
+			m_strSrcDir = CString(szPath);
+			UpdateData(FALSE);
+		}
+	}
+
 	m_ButtonOK.SetFocus();
 	isSelect = false;
 }
@@ -76,16 +91,28 @@ void SelectDirDlg::OnEnSetfocusEditDstPath()
 	if (isSelect) return;
 	isSelect = true;
 
-	char szPath[MAX_PATH] = { 0 };
-	BROWSEINFO bi = { 0 };
-	bi.hwndOwner = m_hWnd;
-	bi.lpszTitle = _T("Select dst dir");
-	LPITEMIDLIST lp = SHBrowseForFolder(&bi);
-	if (lp && SHGetPathFromIDListA(lp, szPath))
+	CButton *p = (CButton *)GetDlgItem(IDC_RADIO_FILE);
+	if (p->GetCheck())
 	{
-		m_strDstDir = CString(szPath);
-		UpdateData(FALSE);
+		CFileDialog dlg(TRUE);
+		if (dlg.DoModal() == IDOK) {
+			m_strDstDir = dlg.GetPathName();
+			UpdateData(FALSE);
+		}
 	}
+	else {
+		char szPath[MAX_PATH] = { 0 };
+		BROWSEINFO bi = { 0 };
+		bi.hwndOwner = m_hWnd;
+		bi.lpszTitle = _T("Select dst dir");
+		LPITEMIDLIST lp = SHBrowseForFolder(&bi);
+		if (lp && SHGetPathFromIDListA(lp, szPath))
+		{
+			m_strDstDir = CString(szPath);
+			UpdateData(FALSE);
+		}
+	}
+
 	m_ButtonOK.SetFocus();
 	isSelect = false;
 }
@@ -107,6 +134,9 @@ BOOL SelectDirDlg::OnInitDialog()
 	CButton *p = (CButton *)GetDlgItem(IDC_RADIO_RECURSIVE);
 	if (p->GetSafeHwnd())
 		p->SetCheck(m_bRecursive);
+	p = (CButton *)GetDlgItem(IDC_RADIO_FILE);
+	if (p->GetSafeHwnd())
+		p->SetCheck(false);
 
 	return TRUE;
 }
@@ -118,4 +148,13 @@ void SelectDirDlg::OnBnClickedRadioRecursive()
 	CButton *p = (CButton *)GetDlgItem(IDC_RADIO_RECURSIVE);
 	if (p->GetSafeHwnd())
 		p->SetCheck(m_bRecursive);
+}
+
+
+void SelectDirDlg::OnBnClickedRadioFile()
+{
+	CButton *p = (CButton *)GetDlgItem(IDC_RADIO_FILE);
+	BOOL b = p->GetCheck();
+	if (p->GetSafeHwnd())
+		p->SetCheck(!b);
 }

@@ -16,68 +16,15 @@
 #include "Resource.h"
 using namespace std;
 
+// @see https://github.com/yuanyuanxiang/public
+// 请将此项目克隆
+#include "../public/fileop.h"
+
 ofstream out;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
-
-// 从小到大排序.字典顺序.
-bool comp(const std::string &i, const std::string &j) { return (i < j); }
-
-// 获取指定目录下的图片.
-bool listImages(std::vector<std::string> &ret, const std::string &dir, bool b)
-{
-	bool result = false;
-	//文件句柄
-	intptr_t hFile = 0;
-	//文件信息  
-	struct _finddata_t fileinfo;
-	std::string p;
-	try
-	{
-		const std::string f = b ? "\\*.*" : "\\*.jpg";
-		if ((hFile = _findfirst(p.assign(dir).append(f).c_str(), 
-			&fileinfo)) != -1){
-			do {
-				if (0 == strcmp(fileinfo.name, ".") || 
-					0 == strcmp(fileinfo.name, ".."))
-					continue;
-				std::string name = fileinfo.name;
-				std::string child = dir + "\\" + name;
-				if (FILE_ATTRIBUTE_DIRECTORY & fileinfo.attrib)
-				{
-					listImages(ret, child, b);
-					continue;
-				}else{
-					if (b) {
-						transform(name.begin(), name.end(), 
-							name.begin(), ::tolower);
-						if (strstr(name.c_str(), ".jpg"))
-							ret.push_back(child);
-					} else {
-						ret.push_back(child);
-					}
-				}
-			} while (_findnext(hFile, &fileinfo) == 0);
-			_findclose(hFile);
-			result = true;
-		}
-	}
-	catch (std::exception e) { if (hFile) _findclose(hFile); }
-	return result;
-}
-
-std::vector<std::string> ListImages(const std::string &dir, bool recursive = false)
-{
-	std::vector<std::string> ret;
-	if (listImages(ret, dir, recursive))
-	{
-		std::sort(ret.begin(), ret.end(), comp);
-	}
-
-	return ret;
-}
 
 Scalar getSSIM(const cv::Mat &i1, const cv::Mat &i2)
 {
@@ -209,6 +156,7 @@ void CImageCompareDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_DST_NAME, m_strDstName);
 	DDX_Control(pDX, IDC_EDIT_CURRENT, m_EditCur);
 	DDX_Control(pDX, IDC_EDIT_TOTAL, m_EditTotal);
+	DDX_Control(pDX, IDC_BUTTON_SCAN, m_ButtonScan);
 }
 
 BEGIN_MESSAGE_MAP(CImageCompareDlg, CDialogEx)
@@ -398,10 +346,22 @@ void CImageCompareDlg::OnFileSet()
 	const char *src = W2A(dlg.m_strSrcDir);
 	const char *dst = W2A(dlg.m_strDstDir);
 	m_recursive = dlg.m_bRecursive;
+	DWORD a1 = GetFileAttributes(dlg.m_strSrcDir);
+	DWORD a2 = GetFileAttributes(dlg.m_strSrcDir);
+	if (a1 != a2)
+	{
+		MessageBox(_T("Wrong file attributes."), _T("Warning"),
+			MB_OK | MB_ICONWARNING);
+		return;
+	}
 	m_strSrcDir = src;
 	m_strDstDir = dst;
-	m_srcList = ListImages(m_strSrcDir, m_recursive);
-	m_dstList = ListImages(m_strDstDir, m_recursive);
+	m_srcList = (a1&FILE_ATTRIBUTE_DIRECTORY)?
+		getFilesByDir(m_strSrcDir, ".*", m_recursive):
+		FileList(1, src);
+	m_dstList = (a2&FILE_ATTRIBUTE_DIRECTORY)?
+		getFilesByDir(m_strDstDir, ".*", m_recursive):
+		FileList(1, dst);
 	if (m_srcList.empty() || m_dstList.empty())
 	{
 		MessageBox(_T("Directory is empty."), _T("Warning"),
@@ -417,6 +377,7 @@ void CImageCompareDlg::OnFileSet()
 		return;
 	}
 	m_nTotalPic = m_srcList.size();
+	m_ButtonScan.EnableWindow(m_nTotalPic > 2);
 	UpdateData(FALSE);
 	Load(1);
 	WritePrivateProfileStringA("settings", "src_dir", m_strSrcDir.c_str(), "./settings.ini");

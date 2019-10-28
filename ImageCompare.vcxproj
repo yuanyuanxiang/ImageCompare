@@ -180,6 +180,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\public\fileop.h" />
     <ClInclude Include="config.h" />
     <ClInclude Include="ImageCompare.h" />
     <ClInclude Include="ImageCompareDlg.h" />
@@ -189,6 +190,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\public\fileop.cpp" />
     <ClCompile Include="ImageCompare.cpp" />
     <ClCompile Include="ImageCompareDlg.cpp" />
     <ClCompile Include="SelectDirDlg.cpp" />
