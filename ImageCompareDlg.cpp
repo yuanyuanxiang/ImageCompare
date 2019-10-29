@@ -171,6 +171,8 @@ BEGIN_MESSAGE_MAP(CImageCompareDlg, CDialogEx)
 	ON_WM_TIMER()
 	ON_WM_DESTROY()
 	ON_WM_ERASEBKGND()
+	ON_STN_DBLCLK(IDC_PIC_SRC, &CImageCompareDlg::OnStnDblclickPicSrc)
+	ON_STN_DBLCLK(IDC_PIC_DST, &CImageCompareDlg::OnStnDblclickPicDst)
 END_MESSAGE_MAP()
 
 
@@ -320,47 +322,28 @@ bool CImageCompareDlg::Load(int cur, bool showWarning) {
 	}
 }
 
-void CImageCompareDlg::OnFileSet()
-{
-	if (m_isScan)return;
-
-	SelectDirDlg dlg;
-	CString s1 = CString((m_strSrcDir.c_str()));
-	CString s2 = CString((m_strDstDir.c_str()));
-	dlg.m_strSrcDir = s1; dlg.m_strDstDir = s2;
-	dlg.m_nScanTime = m_nSleep; dlg.m_bRecursive = m_recursive;
-	bool first_run = m_src.IsNull();
-	if (dlg.DoModal() != IDOK)
-		return;
-	if (m_nSleep!= dlg.m_nScanTime){
-		m_nSleep = dlg.m_nScanTime;
-		char buf[32];
-		sprintf_s(buf, "%d", m_nSleep);
-		WritePrivateProfileStringA("settings", "timer", buf, "./settings.ini");
-	}
-	if ((m_recursive == dlg.m_bRecursive 
-		&& s1 == dlg.m_strSrcDir && s2 == dlg.m_strDstDir) && !first_run) {
-		return;
-	}
-	USES_CONVERSION;
-	const char *src = W2A(dlg.m_strSrcDir);
-	const char *dst = W2A(dlg.m_strDstDir);
-	m_recursive = dlg.m_bRecursive;
-	DWORD a1 = GetFileAttributes(dlg.m_strSrcDir);
-	DWORD a2 = GetFileAttributes(dlg.m_strSrcDir);
+// 加载第一张图
+void CImageCompareDlg::LoadFirst(CString src_, CString dst_) {
+	m_fPSNR = m_fSSIM = 0;
+	m_nCurPic = m_nTotalPic = 0;
+	DWORD a1 = GetFileAttributes(src_);
+	DWORD a2 = GetFileAttributes(dst_);
 	if (a1 != a2)
 	{
 		MessageBox(_T("Wrong file attributes."), _T("Warning"),
 			MB_OK | MB_ICONWARNING);
 		return;
 	}
+	USES_CONVERSION;
+	const char *src = W2A(src_);
+	const char *dst = W2A(dst_);
 	m_strSrcDir = src;
 	m_strDstDir = dst;
-	m_srcList = (a1&FILE_ATTRIBUTE_DIRECTORY)?
-		getFilesByDir(m_strSrcDir, ".*", m_recursive):
+	m_srcList = (a1&FILE_ATTRIBUTE_DIRECTORY) ?
+		getFilesByDir(m_strSrcDir, ".*", m_recursive) :
 		FileList(1, src);
-	m_dstList = (a2&FILE_ATTRIBUTE_DIRECTORY)?
-		getFilesByDir(m_strDstDir, ".*", m_recursive):
+	m_dstList = (a2&FILE_ATTRIBUTE_DIRECTORY) ?
+		getFilesByDir(m_strDstDir, ".*", m_recursive) :
 		FileList(1, dst);
 	if (m_srcList.empty() || m_dstList.empty())
 	{
@@ -385,6 +368,34 @@ void CImageCompareDlg::OnFileSet()
 	char buf[32];
 	sprintf_s(buf, "%d", m_recursive ? 1 : 0);
 	WritePrivateProfileStringA("settings", "recursive", buf, "./settings.ini");
+}
+
+void CImageCompareDlg::OnFileSet()
+{
+	if (m_isScan)return;
+
+	SelectDirDlg dlg;
+	CString s1 = CString((m_strSrcDir.c_str()));
+	CString s2 = CString((m_strDstDir.c_str()));
+	dlg.m_strSrcDir = s1; dlg.m_strDstDir = s2;
+	dlg.m_nScanTime = m_nSleep; dlg.m_bRecursive = m_recursive;
+	bool first_run = m_src.IsNull();
+	if (dlg.DoModal() != IDOK)
+		return;
+	if (m_nSleep!= dlg.m_nScanTime){
+		m_nSleep = dlg.m_nScanTime;
+		char buf[32];
+		sprintf_s(buf, "%d", m_nSleep);
+		WritePrivateProfileStringA("settings", "timer", buf, "./settings.ini");
+	}
+	if ((m_recursive == dlg.m_bRecursive 
+		&& s1 == dlg.m_strSrcDir && s2 == dlg.m_strDstDir) && !first_run) {
+		return;
+	}
+
+	m_recursive = dlg.m_bRecursive;
+
+	LoadFirst(dlg.m_strSrcDir, dlg.m_strSrcDir);
 }
 
 
@@ -524,6 +535,35 @@ BOOL CImageCompareDlg::PreTranslateMessage(MSG* pMsg)
 			return TRUE;
 		}
 	}
+	if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_LBUTTON)
+	{
+	}
 
 	return CDialogEx::PreTranslateMessage(pMsg);
+}
+
+// 双击选择src
+void CImageCompareDlg::OnStnDblclickPicSrc()
+{
+	if (m_srcList.size() <= 1)
+	{
+		CFileDialog dlg(TRUE);
+		if (dlg.DoModal() == IDOK) {
+			CString path = dlg.GetPathName();
+			LoadFirst(path, m_dst.IsNull() ? path : CString(m_strDstDir.c_str()));
+		}
+	}
+}
+
+// 双击选择dst
+void CImageCompareDlg::OnStnDblclickPicDst()
+{
+	if (m_srcList.size() == 1 && m_dstList.size() <= 1)
+	{
+		CFileDialog dlg(TRUE);
+		if (dlg.DoModal() == IDOK) {
+			CString path = dlg.GetPathName();
+			LoadFirst(CString(m_strSrcDir.c_str()), path);
+		}
+	}
 }

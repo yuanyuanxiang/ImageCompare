@@ -26,6 +26,7 @@ public:
 	bool m_recursive;
 	int m_nSleep;
 	bool Load(int cur, bool showWarning=true);
+	void LoadFirst(CString src_, CString dst_);
 
 // ππ‘Ï
 public:
@@ -77,4 +78,6 @@ public:
 	CEdit m_EditCur;
 	CEdit m_EditTotal;
 	CButton m_ButtonScan;
+	afx_msg void OnStnDblclickPicSrc();
+	afx_msg void OnStnDblclickPicDst();
 };

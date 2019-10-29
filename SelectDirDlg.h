@@ -32,6 +32,7 @@ public:
 	CEdit m_EditScanTime;
 	int m_nScanTime;
 	bool m_bRecursive;
+	static bool m_1v1Images; // Í¼Ïñ1¶Ô1±È½Ï
 	virtual void OnOK();
 	virtual BOOL OnInitDialog();
 	afx_msg void OnBnClickedRadioRecursive();

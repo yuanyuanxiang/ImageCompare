@@ -10,6 +10,8 @@
 
 // SelectDirDlg ¶Ô»°¿ò
 
+bool SelectDirDlg::m_1v1Images = false;
+
 IMPLEMENT_DYNAMIC(SelectDirDlg, CDialogEx)
 
 SelectDirDlg::SelectDirDlg(CWnd* pParent /*=NULL*/)
@@ -19,7 +21,6 @@ SelectDirDlg::SelectDirDlg(CWnd* pParent /*=NULL*/)
 	, m_nScanTime(0)
 	, m_bRecursive(false)
 {
-
 }
 
 SelectDirDlg::~SelectDirDlg()
@@ -123,6 +124,9 @@ void SelectDirDlg::OnOK()
 	CButton *p = (CButton *)GetDlgItem(IDC_RADIO_RECURSIVE);
 	if (p->GetSafeHwnd())
 		m_bRecursive = p->GetCheck();
+	p = (CButton *)GetDlgItem(IDC_RADIO_FILE);
+	if (p->GetSafeHwnd())
+		m_1v1Images = p->GetCheck();
 	CDialogEx::OnOK();
 }
 
@@ -136,7 +140,7 @@ BOOL SelectDirDlg::OnInitDialog()
 		p->SetCheck(m_bRecursive);
 	p = (CButton *)GetDlgItem(IDC_RADIO_FILE);
 	if (p->GetSafeHwnd())
-		p->SetCheck(false);
+		p->SetCheck(m_1v1Images);
 
 	return TRUE;
 }
