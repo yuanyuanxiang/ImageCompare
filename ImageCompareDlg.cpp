@@ -535,9 +535,6 @@ BOOL CImageCompareDlg::PreTranslateMessage(MSG* pMsg)
 			return TRUE;
 		}
 	}
-	if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_LBUTTON)
-	{
-	}
 
 	return CDialogEx::PreTranslateMessage(pMsg);
 }
@@ -549,6 +546,7 @@ void CImageCompareDlg::OnStnDblclickPicSrc()
 	{
 		CFileDialog dlg(TRUE);
 		if (dlg.DoModal() == IDOK) {
+			SelectDirDlg::m_1v1Images = true;
 			CString path = dlg.GetPathName();
 			LoadFirst(path, m_dst.IsNull() ? path : CString(m_strDstDir.c_str()));
 		}
